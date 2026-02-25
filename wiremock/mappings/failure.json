@@ -1,0 +1,13 @@
+{
+    "request": {
+        "method": "GET",
+        "url": "/Line/bakerloo/Status"
+    },
+    "response": {
+        "status": 500,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"error\": \"Internal Server Error\"}"
+    }
+}

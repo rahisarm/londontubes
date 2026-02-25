@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/Line/victoria/Status"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": [
+      {
+        "id": "victoria",
+        "name": "Victoria",
+        "modeName": "tube",
+        "lineStatuses": [
+          {
+            "statusSeverity": 10,
+            "statusSeverityDescription": "Good Service"
+          }
+        ]
+      }
+    ]
+  }
+}

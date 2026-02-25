@@ -1,8 +1,6 @@
 package com.ig.group.tfl.status.client;
 
 import com.ig.group.tfl.status.dto.TflLineDto;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Component
 @Slf4j
@@ -42,8 +41,6 @@ public class TflApiClient {
     /**
      * Requirement 1: Get Status of a Given Tube Line
      */
-    @CircuitBreaker(name = "tflApi")
-    @Retry(name = "tflApi")
     public Flux<TflLineDto> getLineStatus(String lineId) {
         String uri = String.format("/Line/%s/Status", lineId);
         log.info("Fetching Line Status from TfL API: {}", uri);
@@ -58,8 +55,6 @@ public class TflApiClient {
     /**
      * Requirement 2: Future Status with Date Range
      */
-    @CircuitBreaker(name = "tflApi")
-    @Retry(name = "tflApi")
     public Flux<TflLineDto> getLineStatusWithDateRange(String lineId, String startDate, String endDate) {
         String uri = String.format("/Line/%s/Status/%s/to/%s", lineId, startDate, endDate);
         log.info("Fetching Future Line Status from TfL API: {}", uri);
@@ -77,8 +72,6 @@ public class TflApiClient {
      * layer)
      * For tube only.
      */
-    @CircuitBreaker(name = "tflApi")
-    @Retry(name = "tflApi")
     public Flux<TflLineDto> getAllTubeLineStatuses() {
         String uri = "/Line/Mode/tube/Status";
         log.info("Fetching All Tube Line Statuses from TfL API: {}", uri);

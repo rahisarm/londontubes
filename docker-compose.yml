@@ -19,6 +19,14 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
 
+  wiremock:
+    image: wiremock/wiremock:latest
+    container_name: wiremock
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./wiremock:/home/wiremock
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana

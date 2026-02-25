@@ -59,12 +59,9 @@ resilience4j:
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
         recordExceptions:
-          - org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
-          - org.springframework.web.reactive.function.client.WebClientResponseException.BadGateway
-          - org.springframework.web.reactive.function.client.WebClientResponseException.GatewayTimeout
-          - org.springframework.web.reactive.function.client.WebClientRequestException
-          - java.util.concurrent.TimeoutException
-          - java.io.IOException
+          - java.lang.Exception
+          - org.springframework.web.client.HttpServerErrorException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
     instances:
       tflApi:
         baseConfig: default
@@ -80,18 +77,10 @@ resilience4j:
         enableRandomizedWait: true
         randomizedWaitFactor: 0.25 # +/- 25% jitter
         # Explicitly don't retry on 4xx Client Errors
-        ignoreExceptions:
-          - org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
-          - org.springframework.web.reactive.function.client.WebClientResponseException.Unauthorized
-          - org.springframework.web.reactive.function.client.WebClientResponseException.Forbidden
-          - org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
         retryExceptions:
-          - org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
-          - org.springframework.web.reactive.function.client.WebClientResponseException.BadGateway
-          - org.springframework.web.reactive.function.client.WebClientResponseException.GatewayTimeout
-          - org.springframework.web.reactive.function.client.WebClientRequestException
-          - java.util.concurrent.TimeoutException
-          - java.io.IOException
+          - java.lang.Exception
+          - org.springframework.web.client.HttpServerErrorException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
     instances:
       tflApi:
         baseConfig: default

@@ -5,6 +5,8 @@ import com.ig.group.tfl.status.dto.TflLineDto;
 import com.ig.group.tfl.status.dto.TflLineStatusDto;
 import com.ig.group.tfl.status.dto.TflValidityPeriodDto;
 import com.ig.group.tfl.status.grpc.*;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -26,6 +28,8 @@ public class TflStatusService {
     private static final String CACHE_NAME_UNPLANNED = "unplannedDisruptions";
 
     @Cacheable(value = CACHE_NAME_LINE_STATUS, key = "#lineId")
+    @CircuitBreaker(name = "tflApi")
+    @Retry(name = "tflApi")
     public Mono<LineStatusResponse> getLineStatus(String lineId) {
         return tflApiClient.getLineStatus(lineId)
                 .collectList()
@@ -34,6 +38,8 @@ public class TflStatusService {
     }
 
     @Cacheable(value = CACHE_NAME_FUTURE_STATUS, key = "{#lineId, #startDate, #endDate}")
+    @CircuitBreaker(name = "tflApi")
+    @Retry(name = "tflApi")
     public Mono<FutureLineStatusResponse> getFutureLineStatus(String lineId, String startDate, String endDate) {
         return tflApiClient.getLineStatusWithDateRange(lineId, startDate, endDate)
                 .collectList()
@@ -42,6 +48,8 @@ public class TflStatusService {
     }
 
     @Cacheable(value = CACHE_NAME_UNPLANNED)
+    @CircuitBreaker(name = "tflApi")
+    @Retry(name = "tflApi")
     public Mono<UnplannedDisruptionsResponse> getUnplannedDisruptions() {
         return tflApiClient.getAllTubeLineStatuses()
                 .filter(this::hasUnplannedDisruption)
