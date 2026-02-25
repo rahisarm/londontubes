@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: 'Spring Boot Default Dashboards'
+    orgId: 1
+    folder: 'Spring Boot'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /etc/grafana/provisioning/dashboards

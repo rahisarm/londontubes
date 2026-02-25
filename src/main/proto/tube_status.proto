@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package com.ig.group.tfl.status;
+
+option java_multiple_files = true;
+option java_package = "com.ig.group.tfl.status.grpc";
+option java_outer_classname = "TubeStatusProto";
+
+service TubeStatusService {
+  // Requirement 1: Return Status of a Given Tube Line
+  rpc GetLineStatus(LineStatusRequest) returns (LineStatusResponse) {}
+
+  // Requirement 2: Future Status with Date Range
+  rpc GetFutureLineStatus(FutureLineStatusRequest) returns (FutureLineStatusResponse) {}
+
+  // Requirement 3: All Unplanned Disruptions
+  rpc GetUnplannedDisruptions(EmptyRequest) returns (UnplannedDisruptionsResponse) {}
+}
+
+message EmptyRequest {}
+
+message LineStatusRequest {
+  string line_id = 1; // e.g., "central", "northern"
+}
+
+message DateRange {
+  string start_date = 1; // YYYY-MM-DD
+  string end_date = 2;   // YYYY-MM-DD
+}
+
+message FutureLineStatusRequest {
+  string line_id = 1;
+  DateRange date_range = 2; // Optional, if omitted behaves like GetLineStatus
+}
+
+// Representing a Tube Line and its Current Status
+message LineInfo {
+  string id = 1;
+  string name = 2;
+  repeated StatusInfo statuses = 3;
+}
+
+// Represents the actual status (Good Service, Severe Delays, etc.)
+message StatusInfo {
+  int32 status_severity = 1; // e.g. 10=Good Service
+  string status_severity_description = 2; // e.g. "Severe Delays"
+  string reason = 3; // The specific disruption reason, if applicable
+  repeated ValidityPeriod validity_periods = 4;
+}
+
+message ValidityPeriod {
+  string from_date = 1; // ISO-8601 timestamp
+  string to_date = 2;   // ISO-8601 timestamp
+  bool is_now = 3;
+}
+
+message LineStatusResponse {
+  LineInfo line = 1;
+}
+
+message FutureLineStatusResponse {
+  LineInfo line = 1;
+}
+
+message UnplannedDisruptionsResponse {
+  repeated LineInfo affected_lines = 1;
+}

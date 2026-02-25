@@ -1,0 +1,109 @@
+server:
+  port: 8080
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: tfl-status-service
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+
+grpc:
+  server:
+    port: 9090
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  tracing:
+    sampling:
+      probability: 1.0 # 100% sampling for demo/testing
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+
+# TfL API Base URL
+tfl:
+  api:
+    base-url: "https://api.tfl.gov.uk"
+    app-id: ${TFL_APP_ID:}
+    app-key: ${TFL_APP_KEY:}
+  cache:
+    ttl-seconds: 60
+
+# --- Resilience4j Configuration for Red Flags ---
+resilience4j:
+  # 1. Circuit Breaker (Open after 5 failures, Half-open after 30s)
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 5 # We want it to open after 5 consecutive failures
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 100 # Explanatory: 5 out of 5 fail = 100%
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordExceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
+          - org.springframework.web.reactive.function.client.WebClientResponseException.BadGateway
+          - org.springframework.web.reactive.function.client.WebClientResponseException.GatewayTimeout
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - java.util.concurrent.TimeoutException
+          - java.io.IOException
+    instances:
+      tflApi:
+        baseConfig: default
+
+  # 2. Retry Logic (Exponential Backoff with Jitter, max 3 retries, only on 5xx or timeouts)
+  retry:
+    configs:
+      default:
+        maxRetryAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        enableRandomizedWait: true
+        randomizedWaitFactor: 0.25 # +/- 25% jitter
+        # Explicitly don't retry on 4xx Client Errors
+        ignoreExceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
+          - org.springframework.web.reactive.function.client.WebClientResponseException.Unauthorized
+          - org.springframework.web.reactive.function.client.WebClientResponseException.Forbidden
+          - org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
+        retryExceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
+          - org.springframework.web.reactive.function.client.WebClientResponseException.BadGateway
+          - org.springframework.web.reactive.function.client.WebClientResponseException.GatewayTimeout
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - java.util.concurrent.TimeoutException
+          - java.io.IOException
+    instances:
+      tflApi:
+        baseConfig: default
+
+  # 3. Rate Limiter (Limit 100 reqs/min per client IP)
+  ratelimiter:
+    configs:
+      default:
+        registerHealthIndicator: true
+        limitForPeriod: 100
+        limitRefreshPeriod: 1m
+        timeoutDuration: 500ms
+    instances:
+      clientIpLimiter:
+        baseConfig: default
